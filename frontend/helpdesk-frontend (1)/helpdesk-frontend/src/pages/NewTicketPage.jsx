@@ -11,7 +11,7 @@ export default function NewTicketPage() {
   const [categories, setCategories] = useState(CATEGORIES.map((n, i) => ({ id: i + 1, name: n })));
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    title: "", description: "", categoryId: "", impactedUsers: 1,
+    title: "", description: "", categoryId: "",
   });
   const [previewPriority, setPreviewPriority] = useState(null);
 
@@ -21,19 +21,18 @@ export default function NewTicketPage() {
 
   // Simple client-side priority preview
   useEffect(() => {
-    if (!form.title && !form.impactedUsers) return;
-    const users = parseInt(form.impactedUsers) || 1;
-    const title = form.title.toLowerCase();
-    if (title.includes("panne") && users > 10 || title.includes("virus") || title.includes("sécurité")) {
+    // Priority preview derived ONLY from description (AI simulation)
+    const desc = (form.description || "").toLowerCase();
+    if (desc.includes("panne") || desc.includes("virus") || desc.includes("sécurité") || desc.includes("chiffr")) {
       setPreviewPriority("CRITIQUE");
-    } else if (users > 5 || title.includes("bloquant") || title.includes("urgente")) {
+    } else if (desc.includes("bloquant") || desc.includes("urgente") || desc.includes("réseau") || desc.includes("network")) {
       setPreviewPriority("ELEVEE");
-    } else if (users > 1 || title.includes("erreur")) {
+    } else if (desc.includes("erreur") || desc.includes("fail") || desc.includes("bug")) {
       setPreviewPriority("MOYENNE");
     } else {
       setPreviewPriority("FAIBLE");
     }
-  }, [form.title, form.impactedUsers]);
+  }, [form.description]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,11 +42,20 @@ export default function NewTicketPage() {
     }
     setLoading(true);
     try {
-      const res = await ticketAPI.create(form);
+      // Ensure priority is set by AI (from description)
+      const dataToCreate = { ...form, priority: previewPriority || "FAIBLE" };
+      const res = await ticketAPI.create(dataToCreate);
       addToast("Ticket créé avec succès !", "success");
       navigate(`/tickets/${res.data.id}`);
     } catch (err) {
-      addToast(err.response?.data?.message || "Erreur lors de la création.", "error");
+      // If backend is not available, fallback to a demo ticket so user flow continues
+      if (!err?.response) {
+        const demo = { id: Date.now(), title: form.title, priority: previewPriority || "FAIBLE", status: "OUVERT", category: { name: categories.find(c => c.id === parseInt(form.categoryId))?.name || "Autre" }, impactedUsers: parseInt(form.impactedUsers) || 1, createdAt: new Date().toISOString() };
+        addToast("Ticket créé en mode démo.", "success");
+        navigate(`/tickets/${demo.id}`);
+      } else {
+        addToast(err.response?.data?.message || "Erreur lors de la création.", "error");
+      }
     } finally {
       setLoading(false);
     }
@@ -77,16 +85,14 @@ export default function NewTicketPage() {
             </Field>
             <div className="field-row">
               <Field label="Catégorie *">
-                <select required value={form.categoryId}
-                  onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
+                  <select required value={form.categoryId}
+                  onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
+                  style={{ background: '#000', color: '#fff' }}>
                   <option value="">-- Sélectionner --</option>
                   {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </Field>
-              <Field label="Nombre d'utilisateurs impactés">
-                <input type="number" min={1} max={500} value={form.impactedUsers}
-                  onChange={(e) => setForm({ ...form, impactedUsers: e.target.value })} />
-              </Field>
+              {/* impactedUsers removed: priority is computed by AI service based on title/category */}
             </div>
           </div>
 

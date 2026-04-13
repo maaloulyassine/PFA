@@ -21,15 +21,11 @@ const S = {
 // ── AI scoring explanation (matches PriorityEngine on backend) ─────────────
 function explainPriority(ticket) {
   const reasons = [];
-  const users = ticket.impactedUsers || 1;
-  const title = (ticket.title || "").toLowerCase();
-
-  if (title.includes("panne") || title.includes("virus") || title.includes("sécurité") || title.includes("chiffr")) {
+  const desc = (ticket.description || ticket.title || "").toLowerCase();
+  if (desc.includes("panne") || desc.includes("virus") || desc.includes("sécurité") || desc.includes("chiffr")) {
     reasons.push("Catégorie critique détectée");
   }
-  if (users > 10) reasons.push(`${users} utilisateurs impactés`);
-  else if (users > 4) reasons.push(`${users} utilisateurs impactés`);
-  if (title.includes("réseau") || title.includes("network")) reasons.push("Incident réseau = impact large");
+  if (desc.includes("réseau") || desc.includes("network") || ticket.category?.name?.toLowerCase() === "réseau") reasons.push("Incident réseau = impact large");
   if (ticket.category?.name === "Sécurité") reasons.push("Risque propagation");
   if (reasons.length === 0) reasons.push("Incident mineur, utilisateur unique");
   return reasons.slice(0, 2).join(" · ");

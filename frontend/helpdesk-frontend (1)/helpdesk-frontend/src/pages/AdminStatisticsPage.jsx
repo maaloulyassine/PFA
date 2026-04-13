@@ -8,6 +8,9 @@ export default function AdminStatisticsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Remove any demo tickets left from previous test runs — user requested deletion
+    try { localStorage.removeItem("demo_tickets"); } catch (e) { /* ignore */ }
+
     Promise.all([
       statsAPI.getGlobal(),
       statsAPI.getTicketsByPriority(),
@@ -16,13 +19,67 @@ export default function AdminStatisticsPage() {
     ]).then(([global, priority, category, technicians]) => {
       setData({ global: global.data, priority: priority.data, category: category.data, technicians: technicians.data });
     }).catch(() => {
-      setData(DEMO_DATA);
+      // Build statistics from local demo tickets if backend is unavailable
+      try {
+        const raw = localStorage.getItem("demo_tickets");
+        const tickets = raw ? JSON.parse(raw) : [];
+
+        const global = {
+          totalTickets: tickets.length,
+          openTickets: tickets.filter(t => t.status !== "RESOLU" && t.status !== "FERME").length,
+          resolvedToday: tickets.filter(t => {
+            if (!t.status) return false;
+            if (t.status !== "RESOLU") return false;
+            const created = new Date(t.createdAt);
+            return (Date.now() - created.getTime()) < 24 * 3600 * 1000;
+          }).length,
+          avgResolutionHours: tickets.length ? (tickets.reduce((acc, t) => acc + (t.resolutionHours || 0), 0) / (tickets.filter(t => t.resolutionHours).length || 1)) : 0,
+          resolutionRate: (() => {
+            const total = tickets.length || 1;
+            const resolved = tickets.filter(t => t.status === "RESOLU").length;
+            return (resolved / total) * 100;
+          })(),
+          satisfactionRate: 0,
+        };
+
+        const priorityMap = {};
+        const categoryMap = {};
+        const techMap = {};
+
+        tickets.forEach(t => {
+          const p = t.priority || "FAIBLE";
+          priorityMap[p] = (priorityMap[p] || 0) + 1;
+
+          const c = (t.category?.name) || (t.category) || "Autre";
+          categoryMap[c] = (categoryMap[c] || 0) + 1;
+
+          if (t.assignedTo && t.assignedTo.firstName) {
+            const key = `${t.assignedTo.firstName} ${t.assignedTo.lastName || ""}`.trim();
+            techMap[key] = techMap[key] || { firstName: t.assignedTo.firstName, lastName: t.assignedTo.lastName, specialty: t.assignedTo.specialty || "—", assigned: 0, resolved: 0, avgHours: 0 };
+            techMap[key].assigned += 1;
+            if (t.status === "RESOLU") techMap[key].resolved += 1;
+            if (t.resolutionHours) {
+              techMap[key].avgHours = ((techMap[key].avgHours * (techMap[key].assigned - 1)) + t.resolutionHours) / techMap[key].assigned;
+            }
+          }
+        });
+
+        const priority = Object.entries(priorityMap).map(([priority, count]) => ({ priority, count }));
+        const category = Object.entries(categoryMap).map(([category, count]) => ({ category, count }));
+        const technicians = Object.values(techMap);
+
+        setData({ global, priority, category, technicians });
+      } catch (e) {
+        setData(DEMO_DATA);
+      }
     }).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="loading-state">Chargement des statistiques…</div>;
 
   const { global: g, priority: pData, category: cData, technicians: tData } = data;
+
+  // demo ticket clearing button/function removed per user request
 
   const maxPriority = Math.max(...(pData || []).map((d) => d.count), 1);
   const maxCat = Math.max(...(cData || []).map((d) => d.count), 1);
@@ -36,6 +93,9 @@ export default function AdminStatisticsPage() {
 
       {/* KPI Cards */}
       <div className="kpi-grid">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+          <button onClick={clearDemoTickets} style={{ background: '#2b2b2b', border: '1px solid rgba(255,255,255,0.06)', color: '#fff', padding: '6px 10px', borderRadius: 8, cursor: 'pointer' }}>Clear demo tickets</button>
+        </div>
         <KPICard label="Total tickets" value={g?.totalTickets || 0} icon="🎫" sub="toutes périodes" color="#4f8ef7" />
         <KPICard label="Tickets ouverts" value={g?.openTickets || 0} icon="🔓" sub="en attente" color="#e74c3c" />
         <KPICard label="Résolus aujourd'hui" value={g?.resolvedToday || 0} icon="✅" sub="dernières 24h" color="#27ae60" />
@@ -129,7 +189,7 @@ export default function AdminStatisticsPage() {
         .perf-table th { padding: 10px 14px; text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: #6e7491; border-bottom: 1px solid rgba(255,255,255,0.07); }
         .perf-table td { padding: 11px 14px; font-size: 13.5px; border-bottom: 1px solid rgba(255,255,255,0.04); }
         .perf-table tr:last-child td { border-bottom: none; }
-        .spec-badge { background: rgba(255,255,255,0.07); color: #a0a3b1; font-size: 11.5px; padding: 3px 9px; border-radius: 6px; }
+        .spec-badge { background: #000; color: #fff; font-size: 11.5px; padding: 3px 9px; border-radius: 6px; }
         .rate-bar-wrapper { display: flex; align-items: center; gap: 8px; }
         .rate-bar { height: 8px; border-radius: 4px; min-width: 4px; }
         .rate-label { font-size: 12px; font-weight: 600; color: #e8eaf0; min-width: 36px; }

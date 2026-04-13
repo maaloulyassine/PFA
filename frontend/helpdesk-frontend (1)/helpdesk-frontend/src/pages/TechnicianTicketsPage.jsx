@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ticketAPI } from "../utils/api";
+import { useAuth } from "../context/AuthContext";
 
 const P_COLOR = { CRITIQUE: "#e74c3c", ELEVEE: "#e67e22", MOYENNE: "#f39c12", FAIBLE: "#27ae60" };
 const P_BG = { CRITIQUE: "rgba(231,76,60,0.15)", ELEVEE: "rgba(230,126,34,0.13)", MOYENNE: "rgba(243,156,18,0.13)", FAIBLE: "rgba(39,174,96,0.13)" };
@@ -11,12 +12,28 @@ export default function TechnicianTicketsPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const { user } = useAuth();
+
   useEffect(() => {
     ticketAPI.getAssigned()
-      .then((r) => setTickets(r.data?.content || r.data || []))
-      .catch(() => setTickets(DEMO))
+      .then((r) => {
+        let t = r.data?.content || r.data || [];
+        if (user?.specialty) {
+          const spec = user.specialty.toLowerCase();
+          t = t.filter(ticket => (ticket.category?.name || "").toLowerCase().includes(spec));
+        }
+        setTickets(t);
+      })
+      .catch(() => {
+        let t = DEMO;
+        if (user?.specialty) {
+          const spec = user.specialty.toLowerCase();
+          t = t.filter(ticket => (ticket.category?.name || "").toLowerCase().includes(spec));
+        }
+        setTickets(t);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [user]);
 
   return (
     <div style={{ maxWidth: 900 }}>
