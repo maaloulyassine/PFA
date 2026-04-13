@@ -17,6 +17,8 @@ export default function TicketsPage() {
   const [filters, setFilters] = useState({ search: "", priority: "", status: "", page: 0 });
   const [totalPages, setTotalPages] = useState(1);
 
+  const { user } = useAuth();
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -25,11 +27,21 @@ export default function TicketsPage() {
       if (filters.priority) params.priority = filters.priority;
       if (filters.status) params.status = filters.status;
       const res = await ticketAPI.getAll(params);
-      const data = res.data;
-      setTickets(data.content || data || []);
+      let data = res.data;
+      let items = data.content || data || [];
+      if (user?.role?.toString().toUpperCase() === "TECHNICIEN" && user?.specialty) {
+        const spec = user.specialty.toLowerCase();
+        items = items.filter(t => (t.category?.name || "").toLowerCase().includes(spec));
+      }
+      setTickets(items);
       setTotalPages(data.totalPages || 1);
     } catch {
-      setTickets(DEMO_TICKETS);
+      let items = DEMO_TICKETS;
+      if (user?.role?.toString().toUpperCase() === "TECHNICIEN" && user?.specialty) {
+        const spec = user.specialty.toLowerCase();
+        items = items.filter(t => (t.category?.name || "").toLowerCase().includes(spec));
+      }
+      setTickets(items);
     } finally {
       setLoading(false);
     }
@@ -81,17 +93,17 @@ export default function TicketsPage() {
         ) : (
           <table className="tickets-table">
             <thead>
-              <tr>
-                <th>#</th>
-                <th>Titre</th>
-                <th>Catégorie</th>
-                <th>Priorité</th>
-                <th>Statut</th>
-                <th>Demandeur</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Titre</th>
+                    {user?.role?.toString().toUpperCase() !== "TECHNICIEN" && <th>Catégorie</th>}
+                    <th>Priorité</th>
+                    <th>Statut</th>
+                    <th>Demandeur</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
             <tbody>
               {tickets.map((t) => (
                 <tr key={t.id}>
@@ -99,7 +111,7 @@ export default function TicketsPage() {
                   <td className="col-title">
                     <Link to={`/tickets/${t.id}`} className="ticket-link">{t.title}</Link>
                   </td>
-                  <td><span className="cat-badge">{t.category?.name || t.category || "—"}</span></td>
+                  {user?.role?.toString().toUpperCase() !== "TECHNICIEN" && <td><span className="cat-badge">{t.category?.name || t.category || "—"}</span></td>}
                   <td>
                     <span className="priority-badge" style={{ background: P_BG[t.priority], color: P_COLOR[t.priority] }}>
                       {t.priority}

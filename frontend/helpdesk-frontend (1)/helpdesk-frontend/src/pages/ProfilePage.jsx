@@ -9,17 +9,38 @@ const ROLE_LABEL = { ADMIN: "Administrateur", TECHNICIEN: "Technicien", USER: "U
 export default function ProfilePage() {
   const { user } = useAuth();
   const { addToast } = useNotifications();
+  const { login } = useAuth();
   const [form, setForm] = useState({ firstName: user?.firstName || "", lastName: user?.lastName || "", email: user?.email || "" });
+  const [avatar, setAvatar] = useState(user?.avatar || null);
   const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await api.put("/users/me", form);
+      // attempt API update, fallback to localStorage demo update
+      await api.put("/users/me", { ...form, avatar });
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        const u = JSON.parse(stored);
+        const nu = { ...u, ...form, avatar };
+        localStorage.setItem("user", JSON.stringify(nu));
+        // update auth context so UI reflects changes immediately
+        await login(nu);
+      }
       addToast("Profil mis à jour.", "success");
     } catch {
       addToast("Profil mis à jour (démo).", "info");
     }
+  };
+
+  const handleAvatar = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAvatar(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handlePassword = async (e) => {
@@ -42,8 +63,14 @@ export default function ProfilePage() {
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 28 }}>Mon profil</h1>
       <div style={{ background: "#1a1d27", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "28px 28px 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 18, paddingBottom: 24, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-          <div style={{ width: 60, height: 60, borderRadius: "50%", background: ROLE_COLOR[user?.role], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "#fff" }}>
-            {user?.firstName?.[0]}{user?.lastName?.[0]}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 72, height: 72, borderRadius: "50%", background: avatar ? 'transparent' : ROLE_COLOR[user?.role], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "#fff", overflow: 'hidden' }}>
+              {avatar ? <img src={avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <>{user?.firstName?.[0]}{user?.lastName?.[0]}</>}
+            </div>
+            <div>
+              <input type="file" accept="image/*" onChange={handleAvatar} style={{ display: 'block', marginBottom: 6 }} />
+              <div style={{ fontSize: 12, color: '#6e7491' }}>PNG/JPG — max 2MB</div>
+            </div>
           </div>
           <div>
             <div style={{ fontSize: 18, fontWeight: 700 }}>{user?.firstName} {user?.lastName}</div>

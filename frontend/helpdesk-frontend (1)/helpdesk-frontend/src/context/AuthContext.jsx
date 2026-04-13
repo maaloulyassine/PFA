@@ -13,13 +13,16 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = async (emailOrUser, password) => {
-    // 👉 DEMO MODE
+  const login = async (emailOrUser, password, role = "USER", specialty = null) => {
+    // 👉 DEMO MODE (object passed)
     if (typeof emailOrUser === "object") {
-      setUser(emailOrUser);
-      localStorage.setItem("user", JSON.stringify(emailOrUser));
+      const u = { ...emailOrUser };
+      if (!u.role) u.role = role;
+      if (specialty && !u.specialty) u.specialty = specialty;
+      setUser(u);
+      localStorage.setItem("user", JSON.stringify(u));
       localStorage.setItem("jwt_token", "demo-token");
-      return;
+      return u;
     }
 
     // 👉 REAL API (fake for now)
@@ -27,12 +30,14 @@ export const AuthProvider = ({ children }) => {
       id: 1,
       firstName: emailOrUser.split("@")[0],
       email: emailOrUser,
-      role: "USER",
+      role: role || "USER",
+      specialty: specialty || null,
     };
 
     setUser(fakeUser);
     localStorage.setItem("user", JSON.stringify(fakeUser));
     localStorage.setItem("jwt_token", "real-token");
+    return fakeUser;
   };
 
   const logout = () => {
@@ -43,8 +48,15 @@ export const AuthProvider = ({ children }) => {
 
   const isAuthenticated = !!user;
 
+  // hasRole(["ADMIN", "TECHNICIEN"]) → true if user's role is in the array
+  const hasRole = (roles) => {
+    if (!user) return false;
+    const ur = (user.role || "").toString().toUpperCase();
+    return roles.map((r) => r.toString().toUpperCase()).includes(ur);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, hasRole }}>
       {children}
     </AuthContext.Provider>
   );

@@ -14,9 +14,9 @@ import AdminStatisticsPage from "./pages/AdminStatisticsPage";
 import TechnicianTicketsPage from "./pages/TechnicianTicketsPage";
 
 function ProtectedRoute({ children, allowedRoles }) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, hasRole } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (allowedRoles && !allowedRoles.includes(user?.role)) return <Navigate to="/dashboard" replace />;
+  if (allowedRoles && !hasRole(allowedRoles)) return <Navigate to="/dashboard" replace />;
   return children;
 }
 

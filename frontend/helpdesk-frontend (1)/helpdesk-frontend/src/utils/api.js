@@ -29,15 +29,118 @@ export const authAPI = {
 
 // ── Tickets ────────────────────────────────────────────
 export const ticketAPI = {
-  getAll: (params) => api.get("/tickets", { params }),
-  getById: (id) => api.get(`/tickets/${id}`),
-  create: (data) => api.post("/tickets", data),
-  update: (id, data) => api.put(`/tickets/${id}`, data),
-  delete: (id) => api.delete(`/tickets/${id}`),
-  updateStatus: (id, status) => api.put(`/tickets/${id}/status`, { status }),
-  addComment: (id, content) => api.post(`/tickets/${id}/comments`, { content }),
-  getAssigned: () => api.get("/tickets/assigned"),
-  getMyTickets: () => api.get("/tickets/mine"),
+  getAll: async (params) => {
+    try {
+      return await api.get("/tickets", { params });
+    } catch (err) {
+      const raw = localStorage.getItem("demo_tickets");
+      const tickets = raw ? JSON.parse(raw) : [];
+      return { data: { content: tickets, totalPages: 1 } };
+    }
+  },
+  getById: async (id) => {
+    try {
+      return await api.get(`/tickets/${id}`);
+    } catch (err) {
+      const raw = localStorage.getItem("demo_tickets");
+      const tickets = raw ? JSON.parse(raw) : [];
+      const t = tickets.find((x) => String(x.id) === String(id));
+      if (t) return { data: t };
+      throw err;
+    }
+  },
+  create: async (data) => {
+    try {
+      return await api.post("/tickets", data);
+    } catch (err) {
+      const raw = localStorage.getItem("demo_tickets");
+      const tickets = raw ? JSON.parse(raw) : [];
+      const id = Date.now();
+      // attach current demo user as creator when available
+      const storedUser = localStorage.getItem("user");
+      const currentUser = storedUser ? JSON.parse(storedUser) : null;
+      const createdBy = currentUser ? { firstName: currentUser.firstName, lastName: currentUser.lastName } : data.createdBy || null;
+      const t = { id, ...data, status: data.status || "OUVERT", createdAt: new Date().toISOString(), createdBy };
+      tickets.unshift(t);
+      localStorage.setItem("demo_tickets", JSON.stringify(tickets));
+      return { data: t };
+    }
+  },
+  update: async (id, data) => {
+    try {
+      return await api.put(`/tickets/${id}`, data);
+    } catch (err) {
+      const raw = localStorage.getItem("demo_tickets");
+      const tickets = raw ? JSON.parse(raw) : [];
+      const idx = tickets.findIndex((x) => String(x.id) === String(id));
+      if (idx !== -1) {
+        tickets[idx] = { ...tickets[idx], ...data };
+        localStorage.setItem("demo_tickets", JSON.stringify(tickets));
+        return { data: tickets[idx] };
+      }
+      throw err;
+    }
+  },
+  delete: async (id) => {
+    try {
+      return await api.delete(`/tickets/${id}`);
+    } catch (err) {
+      const raw = localStorage.getItem("demo_tickets");
+      const tickets = raw ? JSON.parse(raw) : [];
+      const filtered = tickets.filter((x) => String(x.id) !== String(id));
+      localStorage.setItem("demo_tickets", JSON.stringify(filtered));
+      return { data: {} };
+    }
+  },
+  updateStatus: async (id, status) => {
+    try {
+      return await api.put(`/tickets/${id}/status`, { status });
+    } catch (err) {
+      const raw = localStorage.getItem("demo_tickets");
+      const tickets = raw ? JSON.parse(raw) : [];
+      const idx = tickets.findIndex((x) => String(x.id) === String(id));
+      if (idx !== -1) {
+        tickets[idx].status = status;
+        localStorage.setItem("demo_tickets", JSON.stringify(tickets));
+        return { data: tickets[idx] };
+      }
+      throw err;
+    }
+  },
+  addComment: async (id, content) => {
+    try {
+      return await api.post(`/tickets/${id}/comments`, { content });
+    } catch (err) {
+      const raw = localStorage.getItem("demo_tickets");
+      const tickets = raw ? JSON.parse(raw) : [];
+      const idx = tickets.findIndex((x) => String(x.id) === String(id));
+      const comment = { id: Date.now(), content, createdAt: new Date().toISOString() };
+      if (idx !== -1) {
+        tickets[idx].comments = [...(tickets[idx].comments || []), comment];
+        localStorage.setItem("demo_tickets", JSON.stringify(tickets));
+        return { data: comment };
+      }
+      throw err;
+    }
+  },
+  getAssigned: async () => {
+    try {
+      return await api.get("/tickets/assigned");
+    } catch (err) {
+      const raw = localStorage.getItem("demo_tickets");
+      const tickets = raw ? JSON.parse(raw) : [];
+      return { data: tickets.filter(t => t.status !== "RESOLU") };
+    }
+  },
+  getMyTickets: async () => {
+    try {
+      return await api.get("/tickets/mine");
+    } catch (err) {
+      const raw = localStorage.getItem("demo_tickets");
+      const tickets = raw ? JSON.parse(raw) : [];
+      return { data: tickets };
+    }
+  },
 };
 
 // ── Users ──────────────────────────────────────────────

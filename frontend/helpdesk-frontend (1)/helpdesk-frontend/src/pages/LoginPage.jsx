@@ -32,6 +32,7 @@ export default function LoginPage() {
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [selectedRole, setSelectedRole] = useState("USER");
+  const [selectedSpecialty, setSelectedSpecialty] = useState("Réseau");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -48,7 +49,7 @@ export default function LoginPage() {
 
     try {
       // 👉 Try real login (fake for now)
-      await login(form.email, form.password);
+      await login(form.email, form.password, selectedRole, selectedRole === "TECHNICIEN" ? selectedSpecialty : null);
       navigate("/dashboard");
     } catch (err) {
       // 👉 DEMO MODE
@@ -58,10 +59,10 @@ export default function LoginPage() {
         lastName: "",
         email: form.email,
         role: selectedRole,
-        specialty: selectedRole === "TECHNICIEN" ? "Réseau" : null,
+        specialty: selectedRole === "TECHNICIEN" ? selectedSpecialty : null,
       };
 
-      await login(demoUser);      // ✅ update React state
+      await login(demoUser);      // ✅ update React state (demoUser includes role)
       navigate("/dashboard");     // ✅ NO reload
     } finally {
       setLoading(false);
@@ -79,6 +80,16 @@ export default function LoginPage() {
             <div className="login-title">Helpdesk Intelligent</div>
             <div className="login-org">Faculté des Sciences de Monastir</div>
           </div>
+          {selectedRole === "TECHNICIEN" && (
+            <div className="field">
+              <label>Spécialité du technicien</label>
+              <div className="spec-grid">
+                {['Réseau','Logiciel','Matériel','Sécurité','Autre'].map((s) => (
+                  <button key={s} type="button" className={`spec-btn ${selectedSpecialty===s? 'selected':''}`} onClick={() => setSelectedSpecialty(s)}>{s}</button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <p className="login-hint">
@@ -123,9 +134,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   key={r.key}
-                  className={`role-btn ${
-                    selectedRole === r.key ? r.selClass : ""
-                  }`}
+                  className={`role-btn ${selectedRole === r.key ? r.selClass + " selected" : ""}`}
                   onClick={() => setSelectedRole(r.key)}
                 >
                   <span className="role-icon">{r.icon}</span>
@@ -181,13 +190,26 @@ export default function LoginPage() {
           padding: 10px;
           margin-bottom: 16px;
         }
-        .field { margin-bottom: 14px; display: flex; flex-direction: column; }
+        .field label {
+          font-size: 11.5px; font-weight: 600; color: #6e7491;
+          text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+        }
         .field input {
           padding: 10px;
           border-radius: 8px;
           border: 1px solid rgba(255,255,255,0.1);
           background: rgba(255,255,255,0.05);
           color: white;
+          font-size: 14px;
+          width: 100%;
+          outline: none;
+        }
+        .field input:focus { border-color: #4f8ef7; }
+        .role-section { margin-bottom: 18px; }
+        .role-section-label {
+          display: block; font-size: 11.5px; font-weight: 600;
+          color: #6e7491; text-transform: uppercase; letter-spacing: 0.05em;
+          margin-bottom: 8px;
         }
         .role-grid {
           display: grid;
@@ -196,22 +218,48 @@ export default function LoginPage() {
           margin: 10px 0;
         }
         .role-btn {
-          padding: 10px;
+          padding: 10px 8px;
           border-radius: 10px;
           border: 1px solid rgba(255,255,255,0.1);
           background: rgba(255,255,255,0.05);
           cursor: pointer;
+          display: flex; flex-direction: column; align-items: center; gap: 4px;
+          transition: all 0.15s;
+          color: #a0a3b1;
         }
-        .btn-login {
-          width: 100%;
-          padding: 12px;
-          background: linear-gradient(135deg, #1E4DA1, #7B2FBE);
-          border: none;
-          border-radius: 10px;
-          color: white;
-          font-weight: bold;
+        .role-btn:hover { background: rgba(255,255,255,0.09); color: #e8eaf0; }
+        .role-btn.role-user { border-color: rgba(39,174,96,0.5); background: rgba(39,174,96,0.1); color: #4ade80; }
+        .role-btn.role-tech { border-color: rgba(52,152,219,0.5); background: rgba(52,152,219,0.1); color: #60a5fa; }
+        .role-btn.role-admin { border-color: rgba(231,76,60,0.5); background: rgba(231,76,60,0.1); color: #f87171; }
+        .role-icon { font-size: 20px; }
+        .role-name { font-size: 12px; font-weight: 700; }
+        .role-desc { font-size: 10px; color: #6e7491; text-align: center; line-height: 1.3; }
+
+        /* Improved role button visuals */
+        .role-btn {
+          padding: 12px 10px;
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.06);
+          background: rgba(255,255,255,0.03);
           cursor: pointer;
+          display: flex; flex-direction: column; align-items: center; gap: 6px;
+          transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+          color: #c0c3d0;
         }
+        .role-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,0.45); background: rgba(255,255,255,0.06); color: #e8eaf0; }
+        .role-btn.role-user { border-color: rgba(39,174,96,0.35); }
+        .role-btn.role-tech { border-color: rgba(52,152,219,0.35); }
+        .role-btn.role-admin { border-color: rgba(231,76,60,0.35); }
+        .role-btn.selected { background: #000; color: #fff; transform: translateY(-2px); box-shadow: 0 14px 34px rgba(0,0,0,0.6); }
+
+        /* Technician specialty buttons */
+        .spec-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .spec-btn { padding: 8px 12px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); color: #cfd3e0; cursor: pointer; font-weight: 600; }
+        .spec-btn:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .spec-btn.selected { background: #000; color: #fff; box-shadow: 0 8px 18px rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.12); }
+
+        .btn-login { width: 100%; padding: 14px; background: linear-gradient(135deg, #0b66d1, #7b2fbe); border: none; border-radius: 14px; color: white; font-weight: 700; font-size: 15px; cursor: pointer; box-shadow: 0 12px 30px rgba(123,47,190,0.14); }
+        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
       `}</style>
     </div>
   );
