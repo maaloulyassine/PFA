@@ -1,0 +1,24 @@
+--- /workspaces/PFA/frontend/src/pages/TicketsPage.jsx
++++ /workspaces/PFA/frontend/src/pages/TicketsPage.jsx
+@@ -47,7 +47,7 @@
+       }
+       if (filters.category) {
+-        const c = t.category?.name || (typeof t.category === "string" ? t.category : "Réseau");
++        const c = t.category?.name || (typeof t.category === "string" ? t.category : "Non défini");
+         if (c !== filters.category) return false;
+       }
+@@ -69,7 +69,7 @@
+               <th>Statut</th><th>Priorité</th><th>Catégorie</th><th>Créé par</th><th>Assigné à</th><th>Date</th>
+             </tr>
+           </thead>
+           <tbody>
+             {filtered.map((t) => (
+               <tr key={t.id} onClick={() => navigate(`/tickets/${t.id}`)}>
+                 <td>{t.title}</td>
+                 <td><span className={`status-badge ${t.status?.toLowerCase()}`}>{t.status}</span></td>
+                 <td><span className={`priority-badge ${t.priority?.toLowerCase()}`}>{t.priority}</span></td>
+-                <td>{t.category?.name || (typeof t.category === "string" ? t.category : "Réseau")}</td>
++                <td>{t.category?.name || (typeof t.category === "string" ? t.category : "Non défini")}</td>
+                 <td>{t.createdBy?.firstName} {t.createdBy?.lastName}</td>
+                 <td>{t.assignedTo ? `${t.assignedTo.firstName} ${t.assignedTo.lastName}` : "Non assigné"}</td>
+                 <td>{new Date(t.createdAt).toLocaleDateString()}</td>

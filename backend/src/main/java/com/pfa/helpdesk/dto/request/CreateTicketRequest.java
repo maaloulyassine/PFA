@@ -20,9 +20,8 @@ public class CreateTicketRequest {
     @NotBlank(message = "La description est obligatoire")
     private String description;
 
-    @NotNull(message = "La catégorie est obligatoire")
     private Long categoryId;
 
-    @Min(value = 1, message = "Le nombre d'utilisateurs impactés doit être au moins 1")
-    private int impactedUsers = 1;
+    @NotBlank(message = "La priorité est obligatoire")
+    private String priority;
 }

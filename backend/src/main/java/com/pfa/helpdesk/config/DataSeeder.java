@@ -51,10 +51,10 @@ public class DataSeeder implements CommandLineRunner {
         // 3. Ajouter les Catégories de base
         if (categoryRepository.count() == 0) {
             categoryRepository.saveAll(List.of(
-                    Category.builder().name("Problème Réseau / Internet").description("Connexion, VPN, Wifi").build(),
-                    Category.builder().name("Problème Matériel PC").description("Ecran, Clavier, Disque dur").build(),
-                    Category.builder().name("Problème Logiciel").description("Installation, Bug applicatif").build(),
-                    Category.builder().name("Problème Imprimante").description("Bourrage, Toner").build()
+                    Category.builder().name("Réseau").description("Connexion, VPN, Wifi").build(),
+                    Category.builder().name("Matériel").description("Ecran, Clavier, Imprimante").build(),
+                    Category.builder().name("Logiciel").description("Installation, Bug applicatif").build(),
+                    Category.builder().name("Sécurité").description("Virus, Accès, Mot de passe").build()
             ));
         }
     }

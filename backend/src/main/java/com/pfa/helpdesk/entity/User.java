@@ -16,7 +16,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Entity
-@Table(name = "users")
+@Table(name = "hd_users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -45,6 +45,9 @@ public class User implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     private Specialty specialty;
+
+    @Column(columnDefinition = "TEXT")
+    private String avatar;
 
     @Builder.Default
     private boolean enabled = true;

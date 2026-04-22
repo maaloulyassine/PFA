@@ -37,9 +37,8 @@ public class NotificationService {
 
         // 2. Envoyer en Temps Réel via WebSocket (STOMP)
         NotificationResponse payload = mapToResponse(saved);
-        messagingTemplate.convertAndSendToUser(
-                user.getEmail(),
-                "/notifications",
+        messagingTemplate.convertAndSend(
+                "/user/" + user.getEmail() + "/notifications",
                 payload
         );
     }
