@@ -19,9 +19,8 @@ public class TicketResponse {
     private String title;
     private String description;
     private TicketStatus status;
-    private Priority priority;
+    private String priority;
     private Integer priorityScore;
-    private int impactedUsers;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime resolvedAt;
@@ -30,7 +29,7 @@ public class TicketResponse {
     private UserResponse createdBy;
     private UserResponse assignedTo;
     
-    // Simplifié pour éviter de créer CategoryResponse pour l'instant
-    private Long categoryId;
-    private String categoryName;
+    private CategoryResponse category;
+
+    private java.util.List<CommentResponse> comments;
 }

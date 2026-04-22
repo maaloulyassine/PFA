@@ -16,18 +16,20 @@ public class PriorityEngine {
     public void assignPriorityAndSla(Ticket ticket) {
         int score = 0;
 
-        // 1. Impact sur les utilisateurs (plus il y a de monde impacté, plus le score monte)
-        if (ticket.getImpactedUsers() > 50) {
+        // 1. Analyse de la description pour détecter l'urgence
+        String desc = ticket.getDescription() != null ? ticket.getDescription().toLowerCase() : "";
+        if (desc.matches(".*(urgent|critique|bloqué|panne générale|immédiat|tout le monde|plus rien ne marche).*")) {
             score += 50;
-        } else if (ticket.getImpactedUsers() > 10) {
+        } else if (desc.matches(".*(important|grave|impossible de travailler|dérangeant).*")) {
             score += 30;
-        } else if (ticket.getImpactedUsers() > 1) {
+        } else if (desc.matches(".*(lent|gênant|souci|petit problème).*")) {
             score += 10;
         }
 
-        // 2. Facteur par défaut / on pourrait aussi mapper via le nom de la catégorie (ex: Panne Réseau = +40)
+        // 2. Facteur par défaut / on pourrait aussi mapper via le nom de la catégorie
         String catName = ticket.getCategory() != null ? ticket.getCategory().getName().toLowerCase() : "";
-        if (catName.contains("réseau") || catName.contains("serveur")) {
+        if (catName.contains("réseau") || catName.contains("sécurité")) {
+            // Un problème Réseau ou Sécurité donne +40 pts
             score += 40;
         } else if (catName.contains("matériel") || catName.contains("hardware")) {
             score += 20;

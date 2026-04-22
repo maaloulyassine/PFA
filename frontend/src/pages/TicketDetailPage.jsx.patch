@@ -1,0 +1,11 @@
+--- /workspaces/PFA/frontend/src/pages/TicketDetailPage.jsx
++++ /workspaces/PFA/frontend/src/pages/TicketDetailPage.jsx
+@@ -83,7 +83,7 @@
+           <div className="meta-grid">
+             <div className="meta-item"><label>Statut</label><span className={`status-badge ${ticket.status?.toLowerCase()}`}>{ticket.status}</span></div>
+             <div className="meta-item"><label>Priorité</label><span className={`priority-badge ${ticket.priority?.toLowerCase()}`}>{ticket.priority}</span></div>
+-            <div className="meta-item"><label>Catégorie</label><span>{ticket.category?.name || (typeof ticket.category === "string" ? ticket.category : "Réseau")}</span></div>
++            <div className="meta-item"><label>Catégorie</label><span>{ticket.category?.name || (typeof ticket.category === "string" ? ticket.category : "Non défini")}</span></div>
+             <div className="meta-item"><label>Créé par</label><span>{ticket.createdBy?.firstName} {ticket.createdBy?.lastName}</span></div>
+             <div className="meta-item"><label>Assigné à</label><span>{ticket.assignedTo ? `${ticket.assignedTo.firstName} ${ticket.assignedTo.lastName}` : "Non assigné"}</span></div>
+             <div className="meta-item"><label>SLA Deadline</label><span>{ticket.slaDeadline ? new Date(ticket.slaDeadline).toLocaleString() : "-"}</span></div>

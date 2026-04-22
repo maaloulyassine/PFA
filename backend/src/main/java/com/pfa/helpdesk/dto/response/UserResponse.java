@@ -20,6 +20,7 @@ public class UserResponse {
     private String email;
     private Role role;
     private Specialty specialty;
+    private String avatar;
     private boolean enabled;
     private LocalDateTime createdAt;
 }

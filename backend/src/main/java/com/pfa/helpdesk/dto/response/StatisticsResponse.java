@@ -16,6 +16,10 @@ public class StatisticsResponse {
     private long resolvedTickets;
     private long closedTickets;
     
+    private long resolvedToday; // ADDED
+    private double avgResolutionHours; // ADDED
+    
     // Pour des KPIs plus poussés
     private double resolutionRate; 
+    private double satisfactionRate; // ADDED
 }

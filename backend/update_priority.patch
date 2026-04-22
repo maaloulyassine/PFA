@@ -1,0 +1,22 @@
+--- /workspaces/PFA/backend/src/main/java/com/pfa/helpdesk/service/TicketService.java
++++ /workspaces/PFA/backend/src/main/java/com/pfa/helpdesk/service/TicketService.java
+@@ -191,10 +191,18 @@
+ 
+     private TicketResponse mapToResponse(Ticket ticket) {
++        String priorityStr = "FAIBLE";
++        if (ticket.getPriority() != null) {
++            switch (ticket.getPriority()) {
++                case CRITICAL -> priorityStr = "CRITIQUE";
++                case HIGH -> priorityStr = "ELEVEE";
++                case MEDIUM -> priorityStr = "MOYENNE";
++                case LOW -> priorityStr = "FAIBLE";
++            }
++        }
+         return TicketResponse.builder()
+                 .id(ticket.getId())
+                 .title(ticket.getTitle())
+                 .description(ticket.getDescription())
+                 .status(ticket.getStatus())
+-                .priority(ticket.getPriority())
++                .priority(priorityStr)
+                 .category(ticket.getCategory() != null ? com.pfa.helpdesk.dto.response.CategoryResponse.builder().id(ticket.getCategory().getId()).name(ticket.getCategory().getName()).description(ticket.getCategory().getDescription()).build() : null)

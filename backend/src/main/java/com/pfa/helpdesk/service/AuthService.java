@@ -82,6 +82,7 @@ public class AuthService {
                 .email(user.getEmail())
                 .role(user.getRole())
                 .specialty(user.getSpecialty())
+                .avatar(user.getAvatar())
                 .enabled(user.isEnabled())
                 .createdAt(user.getCreatedAt())
                 .build();

@@ -21,4 +21,22 @@ public class AdminController {
     public ResponseEntity<StatisticsResponse> getGlobalStatistics() {
         return ResponseEntity.ok(statisticsService.getGlobalStatistics());
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/statistics/by-priority")
+    public ResponseEntity<java.util.List<com.pfa.helpdesk.repository.PriorityStat>> getTicketsByPriority() {
+        return ResponseEntity.ok(statisticsService.getTicketsByPriority());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/statistics/by-category")
+    public ResponseEntity<java.util.List<com.pfa.helpdesk.repository.CategoryStat>> getTicketsByCategory() {
+        return ResponseEntity.ok(statisticsService.getTicketsByCategory());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/statistics/technicians")
+    public ResponseEntity<java.util.List<com.pfa.helpdesk.dto.response.TechnicianStatDTO>> getTechnicianPerformance() {
+        return ResponseEntity.ok(statisticsService.getTechnicianPerformance());
+    }
 }

@@ -24,7 +24,7 @@ public class AssignmentEngine {
      */
     public void assignTechnicianAutomatically(Ticket ticket) {
         // Déterminer la spécialité requise selon la catégorie
-        Specialty requiredSpecialty = determineSpecialtyFromCategory(ticket.getCategory().getName());
+        Specialty requiredSpecialty = determineSpecialtyFromCategory(ticket.getCategory() != null ? ticket.getCategory().getName() : null);
 
         // 1. Chercher tous les techniciens avec la spécialité requise
         List<User> candidates;

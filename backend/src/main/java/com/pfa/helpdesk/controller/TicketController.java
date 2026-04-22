@@ -4,6 +4,7 @@ import com.pfa.helpdesk.dto.request.CreateTicketRequest;
 import com.pfa.helpdesk.dto.response.TicketHistoryResponse;
 import com.pfa.helpdesk.dto.response.TicketResponse;
 import com.pfa.helpdesk.service.TicketService;
+import java.util.List;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -14,7 +15,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import com.pfa.helpdesk.entity.enums.TicketStatus;
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -34,7 +35,7 @@ public class TicketController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<TicketResponse>> getAllTickets(@org.springdoc.core.annotations.ParameterObject @org.springframework.data.web.PageableDefault(size = 10, sort = "id") Pageable pageable) {
+    public ResponseEntity<Page<TicketResponse>> getAllTickets(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
         return ResponseEntity.ok(ticketService.getAllTickets(pageable));
     }
     
@@ -45,13 +46,13 @@ public class TicketController {
 
     @GetMapping("/mine")
     public ResponseEntity<Page<TicketResponse>> getMyTickets(
-            @AuthenticationPrincipal UserDetails userDetails, @org.springdoc.core.annotations.ParameterObject @org.springframework.data.web.PageableDefault(size = 10, sort = "id") Pageable pageable) {
+            @AuthenticationPrincipal UserDetails userDetails, @org.springdoc.core.annotations.ParameterObject Pageable pageable) {
         return ResponseEntity.ok(ticketService.getMyTickets(userDetails.getUsername(), pageable));
     }
 
     @GetMapping("/assigned")
     public ResponseEntity<Page<TicketResponse>> getAssignedTickets(
-            @AuthenticationPrincipal UserDetails userDetails, @org.springdoc.core.annotations.ParameterObject @org.springframework.data.web.PageableDefault(size = 10, sort = "id") Pageable pageable) {
+            @AuthenticationPrincipal UserDetails userDetails, @org.springdoc.core.annotations.ParameterObject Pageable pageable) {
         return ResponseEntity.ok(ticketService.getAssignedTickets(userDetails.getUsername(), pageable));
     }
 
@@ -66,5 +67,13 @@ public class TicketController {
     @GetMapping("/{id}/history")
     public ResponseEntity<List<TicketHistoryResponse>> getTicketHistory(@PathVariable("id") Long id) {
         return ResponseEntity.ok(ticketService.getTicketHistory(id));
+    }
+    @DeleteMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteTicket(
+            @PathVariable("id") Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        ticketService.deleteTicket(id, userDetails.getUsername());
+        return ResponseEntity.noContent().build();
     }
 }
